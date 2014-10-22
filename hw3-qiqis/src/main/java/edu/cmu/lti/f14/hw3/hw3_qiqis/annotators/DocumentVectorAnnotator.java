@@ -2,6 +2,8 @@ package edu.cmu.lti.f14.hw3.hw3_qiqis.annotators;
 
 import edu.cmu.lti.f14.hw3.hw3_qiqis.utils.*;
 import edu.cmu.lti.f14.hw3.hw3_qiqis.typesystems.*;
+
+import java.io.StringReader;
 import java.util.*;
 
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
@@ -13,6 +15,10 @@ import org.apache.uima.jcas.cas.StringArray;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import edu.cmu.lti.f14.hw3.hw3_qiqis.typesystems.Document;
+import edu.stanford.nlp.ling.Word;
+import edu.stanford.nlp.process.PTBTokenizer.PTBTokenizerFactory;
+import edu.stanford.nlp.process.Tokenizer;
+import edu.stanford.nlp.process.TokenizerFactory;
 
 public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
 
@@ -62,6 +68,30 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
     return res;
   }
 	
+  /**
+   * A more effecient stanford tokenization algorithm!
+   *
+   * @param doc input text
+   * @return    a list of tokens.
+   */
+
+  List<String> tokenize2(String doc) {
+    List<String> res = new ArrayList<String>();
+    
+    TokenizerFactory<Word> factory = PTBTokenizerFactory
+            .newTokenizerFactory();
+        Tokenizer<Word> tokenizer = factory.getTokenizer(new StringReader(
+            doc));
+           
+        List<Word> sList=tokenizer.tokenize();
+        
+        for(int i=0;i<sList.size();i++)
+        {
+          res.add(sList.get(i).toString());
+        }
+        
+    return res;
+  }
 	
 	
 	/**
@@ -78,10 +108,14 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
     //TO DO: use tokenize0 from abovxe 
 		
 		//get the tokens from docoments and calculate its frequency by using hashmap
-		List<String> stringList= tokenize0(docText);
+		//List<String> stringList= tokenize0(docText);
 		
-		//Using new tokenize way to get the result
+		//Using new tokenizing way Stemming Lemmatizer to get the result
     //List<String> stringList= tokenize1(docText);
+		
+		// Using new tokenizing way considering punctuation and whitespace by using stanford tokenization algorithm
+		List<String> stringList= tokenize2(docText);
+		
 		HashMap<String, Integer> hs= new HashMap<String, Integer>();
 		for(int i=0;i<stringList.size();i++)
 		{
@@ -93,6 +127,8 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
 		    hs.put(stringList.get(i), 1);
       }
 		}
+		
+		
 		
 	   //traverse hashmap and put this into tokens arraylist
 	    List<Token> arrayList=new ArrayList<Token>();
