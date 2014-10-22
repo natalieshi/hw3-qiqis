@@ -21,6 +21,7 @@ import org.apache.uima.jcas.cas.FSList;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.ResourceProcessException;
 import org.apache.uima.util.ProcessTrace;
+import org.ejml.alg.dense.decomposition.qr.QrUpdate;
 
 import edu.cmu.lti.f14.hw3.hw3_qiqis.typesystems.Document;
 import edu.cmu.lti.f14.hw3.hw3_qiqis.typesystems.Token;
@@ -148,14 +149,17 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 			}
 			else
 			{
-			  similarity=computeCosineSimilarity(query.GetVector(), Vector);
+			 // similarity=computeCosineSimilarity(query.GetVector(), Vector);
+			  similarity=computeJaccardeSimilarity(query.GetVector(), Vector);
 			  similarityAll.get(similarityAll.size()-1).add(similarity);
 
 			  //add queryDocument to relDocInfos List
 			  if(doc.getRelevanceValue()==1)
 			    relDocInfos.add(dInfo);
-			  
 			}     
+			
+			
+		
 			
 		}
 		
@@ -239,6 +243,38 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 		}
 	
 		return cosine_similarity;
+	}
+	
+	
+	
+	/** 
+	 *  Using Jaccarde index to compute the similarity between two document
+	 * @return similarity
+	 */
+	
+	private double computeJaccardeSimilarity(Map<String, Integer> queryVector,
+	        Map<String, Integer> docVector) {
+	  double jaccard_Similarity = 0;
+	  int interNum=0,totalNum=0;
+	  for(Map.Entry<String, Integer> entry: queryVector.entrySet())
+	  {
+	    if(docVector.containsKey(entry.getKey()))
+	    {
+	      interNum+=Math.min(entry.getValue(), docVector.get(entry.getKey()));
+	    }
+	  }
+	  for(Map.Entry<String, Integer> entry: queryVector.entrySet())
+    {
+      totalNum+=entry.getValue();
+    }
+	  for(Map.Entry<String, Integer> entry: docVector.entrySet())
+    {
+	    totalNum+=entry.getValue();
+    }
+	  
+	  jaccard_Similarity=(interNum*1.0)/(totalNum*1.0);
+	  
+	  return jaccard_Similarity; 
 	}
 
 	/**
