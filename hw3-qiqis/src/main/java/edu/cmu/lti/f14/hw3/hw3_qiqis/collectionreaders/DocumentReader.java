@@ -8,10 +8,18 @@ import org.apache.uima.jcas.JCas;
 
 import edu.cmu.lti.f14.hw3.hw3_qiqis.typesystems.Document;
 
-
-public class DocumentReader 
-extends JCasAnnotator_ImplBase  {
+/**
+ * read from data file, store the relevenceValue, queryID, text and tokenList for each document.
+ * @author shiqiqi
+ *
+ */
+public class DocumentReader extends JCasAnnotator_ImplBase  {
 	
+  /**
+   * read info from file and store that in Jcas
+   * @param JCAS
+   * @throws AnalysisEngineProcessException
+   */
 	@Override
 	public void process(JCas jcas) 
 			throws AnalysisEngineProcessException {
@@ -47,7 +55,11 @@ extends JCasAnnotator_ImplBase  {
 		jcas.addFsToIndexes(doc);
 	}
 
-
+	/**
+	 * To separate one line document into several fields 
+	 * @param one line document
+	 * @return arraylist for each fields
+	 */
 	public static ArrayList<String> parseDataLine(String line) {
 		ArrayList<String> docInfo;
 
@@ -55,7 +67,6 @@ extends JCasAnnotator_ImplBase  {
 		String    sResQid = (rec[0]).replace("qid=", "");
 		String    sResRel = (rec[1]).replace("rel=", "");
 		
-
 		StringBuffer sResTxt = new StringBuffer();
 		for (int i=2; i<rec.length; i++) {
 			sResTxt.append(rec[i]).append(" ");					
@@ -67,5 +78,4 @@ extends JCasAnnotator_ImplBase  {
 		docInfo.add(sResTxt.toString());
 		return docInfo;
 	}
-
 }

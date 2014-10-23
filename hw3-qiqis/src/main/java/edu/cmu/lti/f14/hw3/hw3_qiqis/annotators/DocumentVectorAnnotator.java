@@ -20,6 +20,10 @@ import edu.stanford.nlp.process.PTBTokenizer.PTBTokenizerFactory;
 import edu.stanford.nlp.process.Tokenizer;
 import edu.stanford.nlp.process.TokenizerFactory;
 
+/**
+ * To create Term Frequency vector for each document
+ * @author shiqiqi
+ */
 public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
 
 	@Override
@@ -31,13 +35,12 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
 			Document doc = (Document) iter.get();
 			createTermFreqVector(jcas, doc);
 		}
-
 	}
 
 	/**
    * A basic white-space tokenizer, it deliberately does not split on punctuation!
    *
-	 * @param doc input text
+	 * @param   doc input text
 	 * @return    a list of tokens.
 	 */
 
@@ -53,10 +56,9 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
 	 /**
    * A Stanford Lemmatizer tokenizer, it also deliberately does not split on punctuation!
    *
-   * @param doc input text
+   * @param    doc input text
    * @return    a list of tokens.
    */
-
   List<String> tokenize1(String doc) {
     StanfordLemmatizer stanfordLemmatizer=new StanfordLemmatizer();
     doc=stanfordLemmatizer.stemText(doc);
@@ -74,7 +76,6 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
    * @param doc input text
    * @return    a list of tokens.
    */
-
   List<String> tokenize2(String doc) {
     List<String> res = new ArrayList<String>();
     
@@ -95,7 +96,7 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
 	
 	
 	/**
-	 * 
+	 * create the term frequency vector for each doc
 	 * @param jcas
 	 * @param doc
 	 */
@@ -108,15 +109,17 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
     //TO DO: use tokenize0 from abovxe 
 		
 		//get the tokens from docoments and calculate its frequency by using hashmap
-		//List<String> stringList= tokenize0(docText);
+		List<String> stringList= tokenize0(docText);
 		
 		//Using new tokenizing way Stemming Lemmatizer to get the result
     //List<String> stringList= tokenize1(docText);
 		
 		// Using new tokenizing way considering punctuation and whitespace by using stanford tokenization algorithm
-		List<String> stringList= tokenize2(docText);
+		//List<String> stringList= tokenize2(docText);
 		
+		/** store the term and term frequency */
 		HashMap<String, Integer> hs= new HashMap<String, Integer>();
+		
 		for(int i=0;i<stringList.size();i++)
 		{
 		  if(hs.containsKey(stringList.get(i)))
@@ -127,8 +130,7 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
 		    hs.put(stringList.get(i), 1);
       }
 		}
-		
-		
+			
 		
 	   //traverse hashmap and put this into tokens arraylist
 	    List<Token> arrayList=new ArrayList<Token>();

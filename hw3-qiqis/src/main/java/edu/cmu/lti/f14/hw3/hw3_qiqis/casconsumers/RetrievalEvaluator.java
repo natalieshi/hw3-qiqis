@@ -37,10 +37,10 @@ class DocInfo
   
   public DocInfo(int qid,int rel,Map<String,Integer> vector,String text) {
     // TODO Auto-generated constructor stub
-    this.qid=qid;
-    this.rel=rel;
-    this.vector=vector;
-    this.text=text;
+    this.qid=qid;  //the id for the documents
+    this.rel=rel;  // the relevant for each documents
+    this.vector=vector; //the vector of the tokenList and frequency
+    this.text=text;  //the text for each documents
   }
   
   public Map<String, Integer> GetVector()
@@ -64,6 +64,10 @@ class DocInfo
   }
 }
 
+/**
+ * Calculate the similarity and MRR
+ * @author shiqiqi
+ */
 public class RetrievalEvaluator extends CasConsumer_ImplBase {
 
 	/** query id number **/
@@ -91,14 +95,12 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
   /** record the rank **/
   ArrayList<Integer> rankList=new ArrayList<Integer>();
   
-  
 
 	public void initialize() throws ResourceInitializationException {
 
 		qIdList = new ArrayList<Integer>();
 
 		relList = new ArrayList<Integer>();
-
 	}
 
 	/**
@@ -118,8 +120,7 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 		}
 
 		FSIterator it = jcas.getAnnotationIndex(Document.type).iterator();
-		 Map<String, Integer> Vector=new HashMap<String, Integer>();
-	  
+		Map<String, Integer> Vector=new HashMap<String, Integer>();
 	  
 		if (it.hasNext()) {
 			Document doc = (Document) it.next();
@@ -149,21 +150,17 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 			}
 			else
 			{
-			 // similarity=computeCosineSimilarity(query.GetVector(), Vector);
-			  similarity=computeJaccardeSimilarity(query.GetVector(), Vector);
+			   similarity=computeCosineSimilarity(query.GetVector(), Vector);
+			  //similarity=computeJaccardeSimilarity(query.GetVector(), Vector);
+	      //similarity=computeDiceSimilarity(query.GetVector(), Vector);
+
 			  similarityAll.get(similarityAll.size()-1).add(similarity);
 
 			  //add queryDocument to relDocInfos List
 			  if(doc.getRelevanceValue()==1)
 			    relDocInfos.add(dInfo);
-			}     
-			
-			
-		
-			
+			}     	
 		}
-		
-
 	}
 
 	/**
@@ -176,7 +173,6 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 	  
 		super.collectionProcessComplete(arg0);
 		
-	
 		// TODO :: compute the rank of retrieved sentences
 		File f=new File("report.txt");
 	  BufferedWriter fBufferedWriter=new BufferedWriter(new FileWriter(f));
@@ -188,14 +184,12 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 		  
 		  double firstOne=similarityCluster.get(0);
 		  Collections.sort(similarityCluster);  
-		  Collections.reverse(similarityCluster);
-		 
+		  Collections.reverse(similarityCluster);		 
 		  
 		  rankList.add(similarityCluster.indexOf(firstOne)+1);
-		 
 		  
 		  String newFirst=format.format(firstOne);
-		  fBufferedWriter.write("cosine="+newFirst+" rank="+(similarityCluster.indexOf(firstOne)+1)+" qid="+relDocInfos.get(i).GetQid()+" rel="+1+" "+relDocInfos.get(i).GetText());
+		  fBufferedWriter.write("cosine="+newFirst+"\t"+"rank="+(similarityCluster.indexOf(firstOne)+1)+"\t"+"qid="+relDocInfos.get(i).GetQid()+"\t"+"rel="+1+"\t"+relDocInfos.get(i).GetText());
 		  fBufferedWriter.write("\n");
 		}
 		
@@ -210,7 +204,7 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 	}
 
 	/**
-	 * 
+	 * Using Cosine Similarity method to compute the similarity between two document
 	 * @return cosine_similarity
 	 */
 	private double computeCosineSimilarity(Map<String, Integer> queryVector,
@@ -241,18 +235,16 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
         continue;
       }
 		}
-	
 		return cosine_similarity;
 	}
 	
 	
 	
 	/** 
-	 *  Using Jaccarde index to compute the similarity between two document
+	 * Using Jaccard index to compute the similarity between two document
 	 * @return similarity
 	 */
-	
-	private double computeJaccardeSimilarity(Map<String, Integer> queryVector,
+	private double computeJaccardSimilarity(Map<String, Integer> queryVector,
 	        Map<String, Integer> docVector) {
 	  double jaccard_Similarity = 0;
 	  int interNum=0,totalNum=0;
@@ -260,7 +252,7 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 	  {
 	    if(docVector.containsKey(entry.getKey()))
 	    {
-	      interNum+=Math.min(entry.getValue(), docVector.get(entry.getKey()));
+	      interNum++;
 	    }
 	  }
 	  for(Map.Entry<String, Integer> entry: queryVector.entrySet())
@@ -272,13 +264,42 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 	    totalNum+=entry.getValue();
     }
 	  
-	  jaccard_Similarity=(interNum*1.0)/(totalNum*1.0);
+	  jaccard_Similarity=(interNum*1.0)/((totalNum-interNum)*1.0);
 	  
 	  return jaccard_Similarity; 
 	}
-
+	
+	/** 
+   * Using Dice coeffcient to compute the similarity between two document
+   * @return similarity
+   */
+  private double computeDiceSimilarity(Map<String, Integer> queryVector,
+          Map<String, Integer> docVector) {
+    double Dice_Similarity = 0;
+    int interNum=0,queryNum=0,docNum=0;
+    for(Map.Entry<String, Integer> entry: queryVector.entrySet())
+    {
+      if(docVector.containsKey(entry.getKey()))
+      {
+        interNum+=Math.min(entry.getValue(), docVector.get(entry.getKey()));
+      }
+    }
+    for(Map.Entry<String, Integer> entry: queryVector.entrySet())
+    {
+      queryNum+=entry.getValue();
+    }
+    for(Map.Entry<String, Integer> entry: docVector.entrySet())
+    {
+      docNum+=entry.getValue();
+    }
+    
+    Dice_Similarity=(2.0*interNum)/(1.0*(queryNum+docNum));
+    
+    return Dice_Similarity; 
+  }
+  
 	/**
-	 * 
+	 * Compute MRR function
 	 * @return mrr
 	 */
 	private double compute_mrr() {
